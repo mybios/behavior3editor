@@ -8,7 +8,8 @@ var connect       = require('gulp-connect');
 var less          = require('gulp-less');
 var jshint        = require('gulp-jshint');
 var foreach       = require("gulp-foreach");
-var zip           = require("gulp-zip");
+var zip = require("gulp-zip");
+var sourcemaps = require('gulp-sourcemaps');
 var packager      = require('electron-packager');
 var templateCache = require('gulp-angular-templatecache');
 var replace       = require('gulp-replace');
@@ -17,6 +18,7 @@ var exec          = require('child_process').exec;
 var fs            = require('fs');
 var rimraf        = require('rimraf');
 var merge         = require('merge-stream');
+var path = require("path");
 
 // VARIABLES ==================================================================
 var project       = JSON.parse(fs.readFileSync('package.json', 'utf8'));
@@ -27,7 +29,7 @@ var build_date    = (new Date()).toISOString().replace(/T.*/, '');
 var vendor_js = [
   'src/assets/libs/createjs.min.js',
   'src/assets/libs/creatine-1.0.0.min.js',
-  'src/assets/libs/behavior3js-0.1.0.min.js',
+  'src/assets/libs/behavior3.js',
   'src/assets/libs/mousetrap.min.js',
   'bower_components/angular/angular.min.js',
   'bower_components/angular-animate/angular-animate.min.js',
@@ -81,7 +83,7 @@ var app_entry = [
 // TASKS (VENDOR) =============================================================
 gulp.task('_vendor_js', function() {
   return gulp.src(vendor_js)
-             .pipe(uglify())
+             //.pipe(uglify())
              .pipe(concat('vendor.min.js'))
              .pipe(gulp.dest('build/js'))
 });
@@ -104,8 +106,17 @@ gulp.task('_vendor', ['_vendor_js', '_vendor_css', '_vendor_fonts']);
 // TASKS (PRELOAD) ============================================================
 gulp.task('_preload_js', function() {
   return gulp.src(preload_js)
-             .pipe(uglify())
+  .pipe(sourcemaps.init())
+             //.pipe(uglify())
              .pipe(concat('preload.min.js'))
+             .pipe(sourcemaps.write({
+              // Return relative source map root directories per file.
+              sourceRoot: function (file)
+              {
+                  var sourceFile = path.join(file.cwd, file.sourceMap.file);
+                  return path.relative(path.dirname(sourceFile), file.cwd);
+              }
+          }))
              .pipe(gulp.dest('build/js'))
              .pipe(connect.reload())
 });
@@ -124,24 +135,43 @@ gulp.task('_preload', ['_preload_js', '_preload_css']);
 // TASKS (APP) ================================================================
 gulp.task('_app_js_dev', function() {
   return gulp.src(app_js)
+  .pipe(sourcemaps.init())
              .pipe(jshint())
              .pipe(jshint.reporter(stylish))
              .pipe(replace('[BUILD_VERSION]', build_version))
              .pipe(replace('[BUILD_DATE]', build_date))
              .pipe(concat('app.min.js'))
+             .pipe(sourcemaps.write({
+              // Return relative source map root directories per file.
+              sourceRoot: function (file)
+              {
+                  var sourceFile = path.join(file.cwd, file.sourceMap.file);
+                  return path.relative(path.dirname(sourceFile), file.cwd);
+              }
+          }))
              .pipe(gulp.dest('build/js'))
-             .pipe(connect.reload())
+    .pipe(connect.reload())
 });
 gulp.task('_app_js_build', function() {
   return gulp.src(app_js)
-             .pipe(jshint())
+             .pipe(sourcemaps.init())
+               .pipe(jshint())
              .pipe(jshint.reporter(stylish))
              .pipe(replace('[BUILD_VERSION]', build_version))
              .pipe(replace('[BUILD_DATE]', build_date))
-             .pipe(uglify())
+             //.pipe(uglify())
              .pipe(concat('app.min.js'))
-             .pipe(gulp.dest('build/js'))
+             .pipe(sourcemaps.write({
+              // Return relative source map root directories per file.
+              sourceRoot: function (file)
+              {
+                  var sourceFile = path.join(file.cwd, file.sourceMap.file);
+                  return path.relative(path.dirname(sourceFile), file.cwd);
+              }
+          }))
+    .pipe(gulp.dest('build/js'))
              .pipe(connect.reload())
+             
 });
 
 gulp.task('_app_less', function() {
@@ -160,10 +190,19 @@ gulp.task('_app_imgs', function() {
 
 gulp.task('_app_html', function() {
   return gulp.src(app_html)
+  .pipe(sourcemaps.init())
              .pipe(minifyHTML({empty:true}))
              .pipe(replace('[BUILD_VERSION]', build_version))
              .pipe(replace('[BUILD_DATE]', build_date))
              .pipe(templateCache('templates.min.js', {standalone:true}))
+             .pipe(sourcemaps.write({
+              // Return relative source map root directories per file.
+              sourceRoot: function (file)
+              {
+                  var sourceFile = path.join(file.cwd, file.sourceMap.file);
+                  return path.relative(path.dirname(sourceFile), file.cwd);
+              }
+          }))
              .pipe(gulp.dest('build/js'))
              .pipe(connect.reload())
 });

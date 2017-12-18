@@ -9,19 +9,20 @@ b3e.project.NodeManager = function(editor, project) {
    * - a generic object containing the node prototype.
    */
   this.add = function(node, isDefault) {
-    if (node.prototype) node = node.prototype;
+    // if (node.prototype) node = node.prototype;
 
     if (project._nodes[node.name]) {
       return false;
     }
 
     if (!(node instanceof b3e.Node)) {
-      var n         = new b3e.Node(isDefault);
-      n.name        = node.name;
-      n.category    = node.category;
-      n.title       = node.title;
-      n.description = node.description;
-      n.properties  = tine.merge({}, node.properties||node.parameters);
+      var n = new b3e.Node(isDefault);
+      var defaultNode = new node();
+      n.name        = defaultNode.name;
+      n.category    = defaultNode.category;
+      n.title       = defaultNode.title;
+      n.description = defaultNode.description;
+      n.properties  = tine.merge({}, defaultNode.properties||defaultNode.parameters);
 
       node = n;
     }

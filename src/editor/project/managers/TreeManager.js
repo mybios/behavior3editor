@@ -22,10 +22,11 @@ b3e.project.TreeManager = function(editor, project) {
 
       if (_id) tree._id = _id;
 
-      var node = {
-        name     : tree._id,
-        title    : root.title,
-        category : 'tree', 
+      var node = function Tree()
+      {
+        this.name = tree._id;
+        this.title = root.title;
+        this.category = 'tree';
       };
       project.nodes.add(node, true);
 

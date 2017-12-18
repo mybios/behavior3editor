@@ -133,7 +133,9 @@
           editorService.openProject(project.data);
           _setProject(project);
           resolve();
-        } catch (e) {
+        } catch (e)
+        {
+          console.error("打开项目失败：" , path , e);
           reject(e);
         }
       });
